@@ -181,3 +181,43 @@ Resultado a mano: **registro id 10 (168000)**. Resultado del programa: **id 10**
 - `unidadesPorProducto`: 7 + 6 + 5 + 2 + 1 = 21, igual que `unidadesVendidas`.
 - Top 3 por valor: Origen Huila 500 g (294000), Origen Sierra 500 g (225000), Prensa francesa (190000).
 - `verificar.js`: todos los pares ciclo/método en OK.
+
+---
+
+# MiniReto 4: Reporte v0.1 y registro de depuración
+
+## Error 1: Bogotá aparece dos veces
+
+| Campo | Detalle |
+|---|---|
+| **Síntoma** | En el reporte de ventas por ciudad, "Bogotá" aparecía en dos filas con totales parciales distintos. |
+| **Entrada que lo produce** | Un registro con `ciudad: "Bogotá "` (espacio al final) junto a los registros con `"Bogotá"`. En la muestra el mismo problema ocurre con `"medellín "` frente a `"Medellín"`. Se reproduce con `node src/depurar.js`. |
+| **Hipótesis** | El agrupamiento usa el texto de la ciudad tal cual como clave del objeto. Las claves `"Bogotá"` y `"Bogotá "` son strings distintos, aunque se vean iguales en pantalla. |
+| **Prueba realizada** | Se imprimieron las claves con `JSON.stringify`: aparecieron `"Bogotá"` y `"Bogotá "`, con el espacio visible dentro de las comillas. También se contó `Object.keys(...).length`: la versión preliminar dio más de 4 grupos. |
+| **Causa** | La clave del diccionario se tomaba de `venta.ciudad` sin `trim()` ni normalización de mayúsculas. |
+| **Corrección** | `totalPorCiudad` usa `normalizarCiudad` (`trim()`, `toLowerCase()` y primera letra en mayúscula) para construir la clave. Comprobación: con el registro extra devuelve exactamente 4 ciudades y Bogotá suma 396.000, que es 276.000 más los 120.000 del registro extra. Con la muestra original suma 276.000. |
+
+## Error 2: ticket promedio NaN en un día sin ventas
+
+| Campo | Detalle |
+|---|---|
+| **Síntoma** | Al filtrar un día sin ventas, el ticket promedio mostraba `NaN`. |
+| **Entrada que lo produce** | Un arreglo vacío, por ejemplo las ventas del `2026-09-07`, fecha que no existe en la muestra. |
+| **Hipótesis** | La función divide el total entre la cantidad de ventas. Con 0 ventas la operación es 0 / 0, que en JavaScript da `NaN`. |
+| **Prueba realizada** | Se imprimieron el total (0) y `length` (0), y se ejecutó `0 / 0` en la consola: dio `NaN`. Se confirmó con `Number.isNaN` en `depurar.js`. |
+| **Causa** | La versión preliminar no verificaba que hubiera ventas antes de dividir. Además dividía entre `length` en lugar de entre las ventas válidas (cantidad > 0). |
+| **Corrección** | `ticketPromedio` cuenta las ventas válidas y, si son 0, devuelve 0 antes de dividir. `ventasDelDia` la reutiliza y muestra el resultado como `$ 0` con un mensaje claro de "sin ventas". |
+
+## Decisiones del reporte v0.1
+
+- Los valores se formatean como pesos colombianos con `toLocaleString("es-CO")`, redondeados a pesos enteros. Por eso el ticket promedio 89.545,45 se muestra como `$ 89.545`.
+- Las secciones se alinean con `padEnd` y `padStart`, y los títulos usan líneas de `=`.
+- Las ciudades y los productos se muestran ordenados de mayor a menor, sobre una copia (`[...]`) para no modificar los datos.
+- `ventasDelDia` devuelve siempre un objeto completo. Con un día sin ventas devuelve ceros y `ventaMayor: null`, y el reporte lo muestra como "Sin ventas".
+- `ventasValidas` cuenta solo las ventas con cantidad > 0, para que sea coherente con el divisor del ticket promedio.
+
+## Verificación final
+
+- `node src/reporte.js` muestra las cuatro secciones y el resumen de dos días sin errores, sin `NaN`, sin `undefined` y con 4 ciudades sin duplicados.
+- `node src/verificar.js` muestra todos los pares en OK.
+- `node src/depurar.js` reproduce los dos errores en la versión preliminar y confirma que no aparecen en la v0.1.
