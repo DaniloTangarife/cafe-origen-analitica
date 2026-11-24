@@ -150,3 +150,34 @@ Resultado a mano: **registro id 10 (168000)**. Resultado del programa: **id 10**
 - Ticket promedio: 985000 / 11 ventas válidas (12 menos el id 8) ≈ **89545,45**.
 - Medellín: ids 1, 4, 5 y 11 → 84000 + 42000 + 135000 + 95000 = **356000**.
 - Unidades: 2+1+1+1+3+2+1+0+2+4+1+3 = **21**.
+
+---
+
+# MiniReto 3: Métodos de arreglo, agrupaciones y rankings
+
+## Las cinco preguntas sobre colecciones, por función
+
+| Función | ¿Qué recorro? | ¿Qué filtro? | ¿Qué transformo? | ¿Qué acumulo? | ¿Cómo agrupo? |
+|---|---|---|---|---|---|
+| `totalVendidoM` | Todas las ventas | Nada | Cada venta en su valor (`map` con `valorVenta`) | La suma de valores (`reduce`, inicio 0) | No agrupa |
+| `unidadesVendidasM` | Todas las ventas | Nada | Cada venta en su cantidad (`map`) | La suma de cantidades (`reduce`, inicio 0) | No agrupa |
+| `ventasPorCiudadM` | Todas las ventas | Solo las de la ciudad buscada, normalizada con `trim()` y `toLowerCase()` (`filter`) | Cada venta filtrada en su valor (`map`) | La suma de valores (`reduce`, inicio 0) | No agrupa |
+| `totalPorCiudad` | Todas las ventas | Nada | El nombre de la ciudad se normaliza (`normalizarCiudad`) y se calcula el valor de cada venta | El total de cada ciudad dentro de un objeto | Con un objeto diccionario: la clave es la ciudad normalizada |
+| `unidadesPorProducto` | Todas las ventas | Nada | El nombre del producto se limpia con `trim()` | Las unidades de cada producto | Con un objeto diccionario: la clave es el producto |
+| `topProductosPorValor` | Todas las ventas y luego las entradas del diccionario | Solo los primeros k del ranking (`slice`) | Cada entrada `[producto, valor]` en un objeto `{ producto, valor }` (`map` sobre `Object.entries`) | El valor generado por producto (`reduce`) | Por producto, y luego se ordena de mayor a menor (`sort` sobre una copia) |
+
+## Decisiones de diseño
+
+- **Normalización de ciudades:** `normalizarCiudad` aplica `trim()`, `toLowerCase()` y pone en mayúscula la primera letra de cada palabra. Así "medellín " y "Medellín" caen en la misma clave y el resultado muestra nombres legibles.
+- **Reduce con valor inicial:** todos los `reduce` llevan valor inicial (`0` o `{}`), para que con el arreglo vacío devuelvan 0 o `{}` y no lancen error.
+- **Ordenar sin modificar:** `sort` modifica el arreglo sobre el que se llama. Por eso se ordena `[...productos]`, una copia creada con el operador de propagación. El arreglo `ventas` conserva su orden original y `verificar.js` lo comprueba.
+- **Comparador del `sort`:** `b.valor - a.valor` ordena de mayor a menor. Sin función de comparación, `sort` ordenaría como texto.
+- **Casos borde de `topProductosPorValor`:** con `k <= 0` devuelve `[]`; con `k` mayor que la cantidad de productos devuelve todos; con arreglo vacío devuelve `[]`.
+- **Venta con cantidad 0 (id 8):** aporta 0 al valor y 0 a las unidades. El producto Origen Huila 500 g sigue contándose por las otras ventas, y Cali se mantiene como ciudad porque tiene ventas válidas.
+
+## Resultados verificados
+
+- `totalPorCiudad`: Medellín 356000, Bogotá 276000, Cali 185000, Pereira 168000 → suman 985000, igual que `totalVendido`.
+- `unidadesPorProducto`: 7 + 6 + 5 + 2 + 1 = 21, igual que `unidadesVendidas`.
+- Top 3 por valor: Origen Huila 500 g (294000), Origen Sierra 500 g (225000), Prensa francesa (190000).
+- `verificar.js`: todos los pares ciclo/método en OK.
