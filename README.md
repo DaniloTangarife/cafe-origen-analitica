@@ -17,7 +17,7 @@ Proyecto de la ruta de algoritmia (Riwi). Es un motor de analítica en JavaScrip
 Requisito: Node.js (versión LTS). No necesita instalar dependencias.
 
 ```bash
-git clone https://github.com/TU_USUARIO/cafe-origen-analitica.git
+git clone https://github.com/DaniloTangarife/cafe-origen-analitica.git
 cd cafe-origen-analitica
 node src/reporte.js
 ```
