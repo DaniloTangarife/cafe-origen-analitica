@@ -70,6 +70,91 @@ function ventasPorCiudad(ventas, ciudad) {
   return total;
 }
 
+// ---------------------------------------------------------------
+// MiniReto 3: versiones con métodos de arreglo, agrupaciones y rankings
+// ---------------------------------------------------------------
+
+// Normaliza el nombre de una ciudad: sin espacios sobrantes y con la
+// primera letra de cada palabra en mayúscula ("medellín " -> "Medellín").
+function normalizarCiudad(ciudad) {
+  return ciudad
+    .trim()
+    .toLowerCase()
+    .split(" ")
+    .map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+    .join(" ");
+}
+
+// Versión con métodos de totalVendido.
+// map transforma cada venta en su valor; reduce los acumula (inicio en 0).
+function totalVendidoM(ventas) {
+  return ventas
+    .map((venta) => valorVenta(venta))
+    .reduce((acumulado, valor) => acumulado + valor, 0);
+}
+
+// Versión con métodos de unidadesVendidas.
+function unidadesVendidasM(ventas) {
+  return ventas
+    .map((venta) => venta.cantidad)
+    .reduce((acumulado, cantidad) => acumulado + cantidad, 0);
+}
+
+// Versión con métodos de ventasPorCiudad.
+// filter se queda con la ciudad buscada; map transforma a valor; reduce suma.
+function ventasPorCiudadM(ventas, ciudad) {
+  const ciudadBuscada = ciudad.trim().toLowerCase();
+  return ventas
+    .filter((venta) => venta.ciudad.trim().toLowerCase() === ciudadBuscada)
+    .map((venta) => valorVenta(venta))
+    .reduce((acumulado, valor) => acumulado + valor, 0);
+}
+
+// Agrupa por ciudad (nombre normalizado) y suma el valor vendido.
+// Devuelve un objeto tipo diccionario: { Medellín: 356000, ... }
+// Arreglo vacío -> {}
+function totalPorCiudad(ventas) {
+  return ventas.reduce((grupos, venta) => {
+    const ciudad = normalizarCiudad(venta.ciudad);
+    grupos[ciudad] = (grupos[ciudad] || 0) + valorVenta(venta);
+    return grupos;
+  }, {});
+}
+
+// Agrupa por producto y suma las unidades vendidas.
+// Arreglo vacío -> {}
+function unidadesPorProducto(ventas) {
+  return ventas.reduce((grupos, venta) => {
+    const producto = venta.producto.trim();
+    grupos[producto] = (grupos[producto] || 0) + venta.cantidad;
+    return grupos;
+  }, {});
+}
+
+// Devuelve los k productos que más dinero generaron, de mayor a menor.
+// Cada elemento tiene la forma { producto, valor }.
+// k <= 0 o arreglo vacío -> []; si k supera la cantidad de productos, devuelve todos.
+// No modifica el arreglo `ventas` ni ningún arreglo recibido.
+function topProductosPorValor(ventas, k) {
+  if (k <= 0) {
+    return [];
+  }
+
+  const valorPorProducto = ventas.reduce((grupos, venta) => {
+    const producto = venta.producto.trim();
+    grupos[producto] = (grupos[producto] || 0) + valorVenta(venta);
+    return grupos;
+  }, {});
+
+  const productos = Object.entries(valorPorProducto).map(([producto, valor]) => ({
+    producto,
+    valor,
+  }));
+
+  // [...productos] crea una copia: sort modifica el arreglo sobre el que se llama.
+  return [...productos].sort((a, b) => b.valor - a.valor).slice(0, k);
+}
+
 module.exports = {
   valorVenta,
   totalVendido,
@@ -77,4 +162,11 @@ module.exports = {
   ventaMayor,
   ticketPromedio,
   ventasPorCiudad,
+  normalizarCiudad,
+  totalVendidoM,
+  unidadesVendidasM,
+  ventasPorCiudadM,
+  totalPorCiudad,
+  unidadesPorProducto,
+  topProductosPorValor,
 };
