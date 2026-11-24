@@ -155,6 +155,29 @@ function topProductosPorValor(ventas, k) {
   return [...productos].sort((a, b) => b.valor - a.valor).slice(0, k);
 }
 
+// ---------------------------------------------------------------
+// MiniReto 4: resumen de un día
+// ---------------------------------------------------------------
+
+// Devuelve el resumen de las ventas de una fecha (formato AAAA-MM-DD).
+// Día sin ventas -> todo en 0 y ventaMayor en null (nunca NaN ni error).
+// "ventasValidas" cuenta solo las ventas con cantidad > 0, igual que ticketPromedio.
+function ventasDelDia(ventas, fecha) {
+  const fechaBuscada = fecha.trim();
+  const delDia = ventas.filter((venta) => venta.fecha.trim() === fechaBuscada);
+  const validas = delDia.filter((venta) => venta.cantidad > 0);
+
+  return {
+    fecha: fechaBuscada,
+    registros: delDia.length,
+    ventasValidas: validas.length,
+    unidades: unidadesVendidas(delDia),
+    total: totalVendido(delDia),
+    ticketPromedio: ticketPromedio(delDia),
+    ventaMayor: ventaMayor(delDia),
+  };
+}
+
 module.exports = {
   valorVenta,
   totalVendido,
@@ -169,4 +192,5 @@ module.exports = {
   totalPorCiudad,
   unidadesPorProducto,
   topProductosPorValor,
+  ventasDelDia,
 };
